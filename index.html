@@ -11,6 +11,7 @@
   <title>EuroNews Live</title>
 
   <style>
+
     html,
     body {
       width: 100%;
@@ -25,6 +26,11 @@
       position: fixed;
       inset: 0;
     }
+
+
+    /* =========================
+       VIDEO
+       ========================= */
 
     #video {
       position: absolute;
@@ -43,9 +49,10 @@
       outline: 0;
     }
 
-    /* ==========================================
-       SCHERMATA INIZIALE VIRGIN ACTIVE
-       ========================================== */
+
+    /* =========================
+       SCHERMATA LOGO
+       ========================= */
 
     #splash {
       position: fixed;
@@ -54,42 +61,71 @@
       width: 100%;
       height: 100%;
 
-      background: #000;
-
-      z-index: 9999;
+      background: #ffffff;
 
       display: flex;
       align-items: center;
       justify-content: center;
 
+      z-index: 9999;
+
       opacity: 1;
 
-      transition: opacity 0.8s ease;
-
-      pointer-events: none;
+      transition: opacity 0.4s ease;
     }
 
-    #splash.hidden {
-      opacity: 0;
-    }
+
+    /* LOGO SEMPRE ALLA STESSA DIMENSIONE */
 
     #logo {
       display: block;
 
-      width: min(55vw, 600px);
-      max-width: 600px;
+      width: 320px;
       height: auto;
 
+      max-width: 60vw;
+
       object-fit: contain;
+
+      transform: none;
+      animation: none;
+
+      opacity: 1;
     }
+
+
+    /* NASCONDE LO SPLASH */
+
+    #splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
   </style>
 </head>
 
+
 <body>
 
-  <!-- ==========================================
-       VIDEO EURONEWS
-       ========================================== -->
+
+  <!-- =========================
+       LOGO VIRGIN ACTIVE
+       ========================= -->
+
+  <div id="splash">
+
+    <img
+      id="logo"
+      src="logo.png"
+      alt="Virgin Active"
+    >
+
+  </div>
+
+
+  <!-- =========================
+       VIDEO EURO NEWS
+       ========================= -->
 
   <video
     id="video"
@@ -103,24 +139,7 @@
   ></video>
 
 
-  <!-- ==========================================
-       LOGO VIRGIN ACTIVE
-       ========================================== -->
-
-  <div id="splash">
-
-    <img
-      id="logo"
-      src="logo.png"
-      alt="Virgin Active"
-    >
-
-  </div>
-
-
-  <!-- ==========================================
-       HLS.JS
-       ========================================== -->
+  <!-- HLS.JS -->
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
 
@@ -130,93 +149,64 @@
     const STREAM_URL =
       "https://cdn-euronews.akamaized.net/live/eds/euronews-it/25085/index.m3u8";
 
-
-    const video =
-      document.getElementById("video");
-
-
-    const splash =
-      document.getElementById("splash");
-
+    const video = document.getElementById("video");
+    const splash = document.getElementById("splash");
 
     let hls = null;
-
     let retryTimer = null;
 
 
-    /* ==========================================
+    /* =========================
        AUDIO OFF
-       ========================================== */
+       ========================= */
 
     video.muted = true;
-
     video.volume = 0;
 
     video.autoplay = true;
-
     video.playsInline = true;
 
     video.setAttribute("muted", "");
-
     video.setAttribute("autoplay", "");
-
     video.setAttribute("playsinline", "");
-
     video.setAttribute("webkit-playsinline", "");
 
     video.controls = false;
 
 
-    /* ==========================================
-       NASCONDE IL LOGO
-       ========================================== */
+    /* =========================
+       NASCONDE LOGO DOPO 5 SECONDI
+       ========================= */
 
-    function hideSplash() {
-
-      if (!splash) {
-        return;
-      }
+    setTimeout(function () {
 
       splash.classList.add("hidden");
 
-      setTimeout(function () {
-
-        splash.style.display = "none";
-
-      }, 900);
-
-    }
+    }, 5000);
 
 
-    /* ==========================================
+    /* =========================
        PLAY VIDEO
-       ========================================== */
+       ========================= */
 
     function playVideo() {
 
       video.muted = true;
-
       video.volume = 0;
 
-
       const promise = video.play();
-
 
       if (promise !== undefined) {
 
         promise
           .then(() => {
 
-            console.log(
-              "EuroNews: video avviato"
-            );
+            console.log("EuroNews: video avviato");
 
           })
           .catch(() => {
 
-            console.log(
-              "EuroNews: autoplay in attesa"
-            );
+            console.log("EuroNews: autoplay in attesa");
 
           });
 
@@ -225,81 +215,35 @@
     }
 
 
-    /* ==========================================
-       LOGO INIZIALE
-       ==========================================
-
-       Il logo rimane visibile almeno 3 secondi.
-       In questo modo il caricamento iniziale
-       di Euronews non viene mostrato.
-
-    */
-
-    const splashStart = Date.now();
-
-    const MIN_SPLASH_TIME = 3000;
-
-
-    function hideSplashWhenReady() {
-
-      const elapsed =
-        Date.now() - splashStart;
-
-
-      const remaining =
-        Math.max(
-          0,
-          MIN_SPLASH_TIME - elapsed
-        );
-
-
-      setTimeout(function () {
-
-        hideSplash();
-
-      }, remaining);
-
-    }
-
-
-    /* ==========================================
+    /* =========================
        RESET HLS
-       ========================================== */
+       ========================= */
 
     function destroyHLS() {
 
       if (hls) {
 
         try {
-
           hls.destroy();
-
         } catch (e) {}
 
         hls = null;
-
       }
 
     }
 
 
-    /* ==========================================
+    /* =========================
        RICONNESSIONE
-       ========================================== */
+       ========================= */
 
     function reconnect() {
 
       if (retryTimer) {
-
         return;
-
       }
 
-
-      console.log(
-        "EuroNews: riconnessione..."
-      );
-
+      console.log("EuroNews: riconnessione...");
 
       retryTimer = setTimeout(() => {
 
@@ -314,14 +258,13 @@
     }
 
 
-    /* ==========================================
+    /* =========================
        HLS.JS
-       ========================================== */
+       ========================= */
 
     function startHLS() {
 
       destroyHLS();
-
 
       hls = new Hls({
 
@@ -330,7 +273,6 @@
         capLevelToPlayerSize: true,
 
         maxBufferLength: 10,
-
         maxMaxBufferLength: 20,
 
         backBufferLength: 15,
@@ -340,21 +282,15 @@
         enableWorker: true,
 
         fragLoadingMaxRetry: 6,
-
         manifestLoadingMaxRetry: 6,
-
         levelLoadingMaxRetry: 6,
 
         fragLoadingRetryDelay: 1000,
-
         manifestLoadingRetryDelay: 1000,
-
         levelLoadingRetryDelay: 1000,
 
         fragLoadingTimeOut: 10000,
-
         manifestLoadingTimeOut: 10000,
-
         levelLoadingTimeOut: 10000
 
       });
@@ -367,9 +303,7 @@
         Hls.Events.MEDIA_ATTACHED,
         function () {
 
-          console.log(
-            "EuroNews: player collegato"
-          );
+          console.log("EuroNews: player collegato");
 
           hls.loadSource(STREAM_URL);
 
@@ -381,9 +315,7 @@
         Hls.Events.MANIFEST_PARSED,
         function () {
 
-          console.log(
-            "EuroNews: stream disponibile"
-          );
+          console.log("EuroNews: stream disponibile");
 
           playVideo();
 
@@ -403,21 +335,15 @@
 
 
           if (!data.fatal) {
-
             return;
-
           }
 
 
           switch (data.type) {
 
-
             case Hls.ErrorTypes.NETWORK_ERROR:
 
-              console.log(
-                "EuroNews: errore rete"
-              );
-
+              console.log("EuroNews: errore rete");
 
               try {
 
@@ -434,10 +360,7 @@
 
             case Hls.ErrorTypes.MEDIA_ERROR:
 
-              console.log(
-                "EuroNews: errore media"
-              );
-
+              console.log("EuroNews: errore media");
 
               try {
 
@@ -454,9 +377,7 @@
 
             default:
 
-              console.log(
-                "EuroNews: riavvio player"
-              );
+              console.log("EuroNews: riavvio player");
 
               reconnect();
 
@@ -470,18 +391,16 @@
     }
 
 
-    /* ==========================================
+    /* =========================
        AVVIO STREAM
-       ========================================== */
+       ========================= */
 
     function startStream() {
 
       destroyHLS();
 
 
-      /* ========================================
-         HLS NATIVO
-         ======================================== */
+      /* HLS NATIVO */
 
       if (
         video.canPlayType(
@@ -489,10 +408,7 @@
         )
       ) {
 
-        console.log(
-          "EuroNews: HLS nativo"
-        );
-
+        console.log("EuroNews: HLS nativo");
 
         video.src = STREAM_URL;
 
@@ -503,9 +419,6 @@
 
             playVideo();
 
-            hideSplashWhenReady();
-
-
             video.removeEventListener(
               "loadedmetadata",
               nativePlay
@@ -514,66 +427,32 @@
           }
         );
 
-
         return;
-
       }
 
 
-      /* ========================================
-         HLS.JS
-         ======================================== */
+      /* HLS.JS */
 
-      if (
-        window.Hls &&
-        Hls.isSupported()
-      ) {
+      if (window.Hls && Hls.isSupported()) {
 
-        console.log(
-          "EuroNews: HLS.js"
-        );
-
+        console.log("EuroNews: HLS.js");
 
         startHLS();
 
-
         return;
-
       }
 
 
-      console.log(
-        "EuroNews: HLS non supportato"
-      );
-
+      console.log("EuroNews: HLS non supportato");
 
       reconnect();
 
     }
 
 
-    /* ==========================================
-       VIDEO AVVIATO
-       ========================================== */
-
-    video.addEventListener(
-      "playing",
-      function () {
-
-        console.log(
-          "EuroNews: PLAYING"
-        );
-
-
-        hideSplashWhenReady();
-
-      }
-    );
-
-
-    /* ==========================================
+    /* =========================
        STALLED
-       ========================================== */
+       ========================= */
 
     video.addEventListener(
       "stalled",
@@ -601,9 +480,9 @@
     );
 
 
-    /* ==========================================
+    /* =========================
        ENDED
-       ========================================== */
+       ========================= */
 
     video.addEventListener(
       "ended",
@@ -613,16 +492,15 @@
           "EuroNews: stream terminato"
         );
 
-
         reconnect();
 
       }
     );
 
 
-    /* ==========================================
+    /* =========================
        ERROR
-       ========================================== */
+       ========================= */
 
     video.addEventListener(
       "error",
@@ -632,21 +510,19 @@
           "EuroNews: errore video"
         );
 
-
         reconnect();
 
       }
     );
 
 
-    /* ==========================================
+    /* =========================
        CONTROLLO AUTOMATICO
-       ========================================== */
+       ========================= */
 
     setInterval(function () {
 
       video.muted = true;
-
       video.volume = 0;
 
 
@@ -662,12 +538,11 @@
     }, 5000);
 
 
-    /* ==========================================
+    /* =========================
        AVVIO
-       ========================================== */
+       ========================= */
 
     startStream();
-
 
   </script>
 
