@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -66,7 +65,7 @@
 
     /* =========================================================
        EURONEWS LIVE
-       Versione ottimizzata per OptiSigns / TV
+       VERSIONE STABILE PER OPTISIGNS / TV
        AUDIO DISATTIVATO
        ========================================================= */
 
@@ -113,11 +112,20 @@
 
         promise
           .then(() => {
+
             started = true;
-            console.log("EuroNews: video avviato");
+
+            console.log(
+              "EuroNews: video avviato"
+            );
+
           })
           .catch(() => {
-            console.log("EuroNews: autoplay in attesa");
+
+            console.log(
+              "EuroNews: autoplay in attesa"
+            );
+
           });
 
       }
@@ -151,7 +159,9 @@
         return;
       }
 
-      console.log("EuroNews: riconnessione...");
+      console.log(
+        "EuroNews: riconnessione..."
+      );
 
       retryTimer = setTimeout(() => {
 
@@ -181,7 +191,7 @@
         /* Adatta automaticamente la qualità */
         capLevelToPlayerSize: true,
 
-        /* Buffer contenuto per evitare ritardi eccessivi */
+        /* Buffer contenuto */
         maxBufferLength: 10,
         maxMaxBufferLength: 20,
 
@@ -203,7 +213,7 @@
         manifestLoadingRetryDelay: 1000,
         levelLoadingRetryDelay: 1000,
 
-        /* Timeout ragionevoli */
+        /* Timeout */
         fragLoadingTimeOut: 10000,
         manifestLoadingTimeOut: 10000,
         levelLoadingTimeOut: 10000
@@ -213,75 +223,130 @@
       hls.attachMedia(video);
 
 
-      hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+      /* =====================================================
+         PLAYER COLLEGATO
+         ===================================================== */
 
-        console.log("EuroNews: player collegato");
+      hls.on(
+        Hls.Events.MEDIA_ATTACHED,
+        function () {
 
-        hls.loadSource(STREAM_URL);
+          console.log(
+            "EuroNews: player collegato"
+          );
 
-      });
+          hls.loadSource(
+            STREAM_URL
+          );
+
+        }
+      );
 
 
-      hls.on(Hls.Events.MANIFEST_PARSED, function () {
+      /* =====================================================
+         STREAM PRONTO
+         ===================================================== */
 
-        console.log("EuroNews: stream disponibile");
+      hls.on(
+        Hls.Events.MANIFEST_PARSED,
+        function () {
 
-        playVideo();
+          console.log(
+            "EuroNews: stream disponibile"
+          );
 
-      });
+          playVideo();
+
+        }
+      );
 
 
       /* =====================================================
          GESTIONE ERRORI HLS
          ===================================================== */
 
-      hls.on(Hls.Events.ERROR, function (event, data) {
+      hls.on(
+        Hls.Events.ERROR,
+        function (event, data) {
 
-        console.log("HLS error:", data.type, data.details);
+          console.log(
+            "HLS error:",
+            data.type,
+            data.details
+          );
 
-        if (!data.fatal) {
-          return;
-        }
+
+          if (!data.fatal) {
+            return;
+          }
 
 
-        switch (data.type) {
+          /* -------------------------------------------------
+             ERRORE RETE
+             ------------------------------------------------- */
 
-          case Hls.ErrorTypes.NETWORK_ERROR:
+          switch (data.type) {
 
-            console.log("EuroNews: errore rete");
+            case Hls.ErrorTypes.NETWORK_ERROR:
 
-            try {
-              hls.startLoad();
-            } catch (e) {
+              console.log(
+                "EuroNews: errore rete"
+              );
+
+              try {
+
+                hls.startLoad();
+
+              } catch (e) {
+
+                reconnect();
+
+              }
+
+              break;
+
+
+            /* -------------------------------------------------
+               ERRORE MEDIA
+               ------------------------------------------------- */
+
+            case Hls.ErrorTypes.MEDIA_ERROR:
+
+              console.log(
+                "EuroNews: errore media"
+              );
+
+              try {
+
+                hls.recoverMediaError();
+
+              } catch (e) {
+
+                reconnect();
+
+              }
+
+              break;
+
+
+            /* -------------------------------------------------
+               ERRORE GRAVE
+               ------------------------------------------------- */
+
+            default:
+
+              console.log(
+                "EuroNews: riavvio player"
+              );
+
               reconnect();
-            }
 
-            break;
+              break;
 
+          }
 
-          case Hls.ErrorTypes.MEDIA_ERROR:
-
-            console.log("EuroNews: errore media");
-
-            try {
-              hls.recoverMediaError();
-            } catch (e) {
-              reconnect();
-            }
-
-            break;
-
-
-          default:
-
-            console.log("EuroNews: riavvio player");
-
-            reconnect();
-
-            break;
         }
-
-      });
+      );
 
     }
 
@@ -299,9 +364,15 @@
          1. HLS NATIVO
          ------------------------------------------------------- */
 
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      if (
+        video.canPlayType(
+          "application/vnd.apple.mpegurl"
+        )
+      ) {
 
-        console.log("EuroNews: HLS nativo");
+        console.log(
+          "EuroNews: HLS nativo"
+        );
 
         video.src = STREAM_URL;
 
@@ -327,9 +398,14 @@
          2. HLS.JS
          ------------------------------------------------------- */
 
-      if (window.Hls && Hls.isSupported()) {
+      if (
+        window.Hls &&
+        Hls.isSupported()
+      ) {
 
-        console.log("EuroNews: HLS.js");
+        console.log(
+          "EuroNews: HLS.js"
+        );
 
         startHLS();
 
@@ -341,7 +417,9 @@
          3. NESSUN SUPPORTO
          ------------------------------------------------------- */
 
-      console.log("EuroNews: HLS non supportato");
+      console.log(
+        "EuroNews: HLS non supportato"
+      );
 
       reconnect();
 
@@ -352,69 +430,103 @@
        STREAM BLOCCATO / STALLED
        ========================================================= */
 
-    video.addEventListener("stalled", function () {
+    video.addEventListener(
+      "stalled",
+      function () {
 
-      console.log("EuroNews: stream stalled");
+        console.log(
+          "EuroNews: stream stalled"
+        );
 
-      setTimeout(() => {
 
-        if (video.paused || video.readyState < 3) {
-          reconnect();
-        }
+        setTimeout(
+          () => {
 
-      }, 5000);
+            if (
+              video.paused ||
+              video.readyState < 3
+            ) {
 
-    });
+              reconnect();
+
+            }
+
+          },
+          5000
+        );
+
+      }
+    );
 
 
     /* =========================================================
        STREAM TERMINATO
        ========================================================= */
 
-    video.addEventListener("ended", function () {
+    video.addEventListener(
+      "ended",
+      function () {
 
-      console.log("EuroNews: stream terminato");
+        console.log(
+          "EuroNews: stream terminato"
+        );
 
-      reconnect();
+        reconnect();
 
-    });
+      }
+    );
 
 
     /* =========================================================
        ERRORE VIDEO
        ========================================================= */
 
-    video.addEventListener("error", function () {
+    video.addEventListener(
+      "error",
+      function () {
 
-      console.log("EuroNews: errore video");
+        console.log(
+          "EuroNews: errore video"
+        );
 
-      reconnect();
+        reconnect();
 
-    });
+      }
+    );
 
 
     /* =========================================================
        CONTROLLO PERIODICO
        ========================================================= */
 
-    setInterval(function () {
+    setInterval(
+      function () {
 
-      if (!video) {
-        return;
-      }
+        if (!video) {
+          return;
+        }
 
-      /* Mantiene sempre l'audio disattivato */
-      video.muted = true;
-      video.volume = 0;
 
-      /* Se il video è fermo, prova a ripartire */
-      if (video.paused && video.readyState >= 2) {
+        /* Audio sempre disattivato */
 
-        playVideo();
+        video.muted = true;
+        video.volume = 0;
 
-      }
 
-    }, 5000);
+        /* Se il video è fermo, riparte */
+
+        if (
+          video.paused &&
+          video.readyState >= 2
+        ) {
+
+          playVideo();
+
+        }
+
+      },
+      5000
+    );
 
 
     /* =========================================================
