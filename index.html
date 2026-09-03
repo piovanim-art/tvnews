@@ -17,25 +17,163 @@
             overflow: hidden;
         }
 
-        iframe {
+        #video {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            border: 0;
+            object-fit: cover;
+            background: #000;
+        }
+
+        #status {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            display: none;
+            z-index: 10;
         }
     </style>
 </head>
 
 <body>
 
-    <iframe
-        src="https://www.youtube.com/embed/viutwcP3PIg?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1"
-        title="Euronews Italia Live"
-        allow="autoplay; encrypted-media; fullscreen"
-        allowfullscreen>
-    </iframe>
+    <video
+        id="video"
+        autoplay
+        muted
+        playsinline
+        controls="false">
+    </video>
+
+    <div id="status">Connessione a Euronews...</div>
+
+    <!-- HLS.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <script>
+
+        const video = document.getElementById("video");
+        const status = document.getElementById("status");
+
+        const STREAM_URL =
+            "https://cdn-euronews.akamaized.net/live/eds/euronews-it/25085/index.m3u8";
+
+        function showStatus(text) {
+            status.textContent = text;
+            status.style.display = "block";
+        }
+
+        function hideStatus() {
+            status.style.display = "none";
+        }
+
+        function startStream() {
+
+            if (Hls.isSupported()) {
+
+                const hls = new Hls({
+                    liveSyncDurationCount: 3,
+                    liveMaxLatencyDurationCount: 6,
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 30
+                });
+
+                hls.loadSource(STREAM_URL);
+
+                hls.attachMedia(video);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+
+                    hideStatus();
+
+                    video.play().catch(function () {
+                        console.log("Autoplay bloccato");
+                    });
+
+                });
+
+                hls.on(Hls.Events.ERROR, function (event, data) {
+
+                    console.log("HLS error:", data);
+
+                    if (data.fatal) {
+
+                        switch (data.type) {
+
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+
+                                showStatus("Riconnessione...");
+
+                                setTimeout(function () {
+                                    hls.startLoad();
+                                }, 3000);
+
+                                break;
+
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+
+                                hls.recoverMediaError();
+
+                                break;
+
+                            default:
+
+                                hls.destroy();
+
+                                setTimeout(startStream, 5000);
+
+                                break;
+                        }
+                    }
+                });
+
+            }
+
+            else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+
+                video.src = STREAM_URL;
+
+                video.addEventListener("loadedmetadata", function () {
+
+                    hideStatus();
+
+                    video.play().catch(function () {
+                        console.log("Autoplay bloccato");
+                    });
+
+                });
+
+            }
+
+            else {
+
+                showStatus("Il dispositivo non supporta lo streaming HLS.");
+
+            }
+        }
+
+        video.addEventListener("waiting", function () {
+            showStatus("Caricamento...");
+        });
+
+        video.addEventListener("playing", function () {
+            hideStatus();
+        });
+
+        video.addEventListener("stalled", function () {
+            showStatus("Riconnessione...");
+        });
+
+        startStream();
+
+    </script>
 
 </body>
 </html>
