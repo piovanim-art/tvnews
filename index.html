@@ -19,7 +19,6 @@
 
 html,
 body {
-
   width: 100%;
   height: 100%;
 
@@ -30,15 +29,20 @@ body {
 
   overflow: hidden;
 
+  transform: none !important;
 }
 
 
-body {
+/* =========================================================
+   BODY
+   ========================================================= */
 
+body {
   position: fixed;
 
   inset: 0;
 
+  background: #000;
 }
 
 
@@ -53,26 +57,25 @@ body {
   left: 0;
   top: 0;
 
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
 
   margin: 0;
   padding: 0;
 
-  display: block;
+  border: 0;
+  outline: 0;
 
   background: #000;
 
   object-fit: contain;
 
-  border: 0;
-  outline: 0;
-
+  display: block;
 }
 
 
 /* =========================================================
-   SCHERMATA INIZIALE
+   SCHERMATA LOGO
    ========================================================= */
 
 #logoScreen {
@@ -95,7 +98,11 @@ body {
   align-items: center;
   justify-content: center;
 
-  z-index: 999999;
+  z-index: 100000;
+
+  opacity: 1;
+
+  visibility: visible;
 
   transform: none !important;
 
@@ -105,41 +112,36 @@ body {
 
 
 /* =========================================================
-   CONTENITORE LOGO
-   DIMENSIONE FISSA
+   LOGO
    ========================================================= */
 
-#logoBox {
-
-  width: 600px !important;
-
-  height: 300px !important;
-
-  min-width: 600px !important;
-
-  min-height: 300px !important;
-
-  max-width: 600px !important;
-
-  max-height: 300px !important;
-
-  flex: 0 0 600px !important;
+#logo {
 
   display: block;
 
-  position: relative;
+  width: 520px;
+  height: auto;
+
+  min-width: 520px;
+  max-width: 520px;
+
+  min-height: auto;
+  max-height: none;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+
+  object-fit: contain;
+
+  object-position: center;
 
   transform: none !important;
 
-  zoom: 1 !important;
+  transition: none !important;
 
-  background-image: url("logo.png");
-
-  background-repeat: no-repeat;
-
-  background-position: center center;
-
-  background-size: 600px auto;
+  animation: none !important;
 
 }
 
@@ -151,6 +153,26 @@ body {
 #logoScreen.hidden {
 
   display: none !important;
+
+  visibility: hidden !important;
+
+  opacity: 0 !important;
+
+}
+
+
+/* =========================================================
+   BLOCCA QUALSIASI ANIMAZIONE
+   ========================================================= */
+
+#logo,
+#logoScreen,
+body,
+html {
+
+  transition: none !important;
+
+  animation: none !important;
 
 }
 
@@ -168,23 +190,31 @@ body {
 
 <div id="logoScreen">
 
-  <div id="logoBox"></div>
+  <img
+    id="logo"
+    src="logo.png"
+    alt="Virgin Active"
+  >
 
 </div>
 
 
 <!-- =======================================================
-     VIDEO
+     VIDEO EURONEWS
      ======================================================= -->
 
 <video
   id="video"
+
   autoplay
   muted
   playsinline
   webkit-playsinline
+
   preload="auto"
+
   disablepictureinpicture
+
   controlslist="nodownload noplaybackrate nofullscreen"
 ></video>
 
@@ -225,9 +255,11 @@ let hls = null;
 
 let retryTimer = null;
 
+let logoTimer = null;
+
 
 /* =========================================================
-   AUDIO OFF
+   AUDIO
    ========================================================= */
 
 video.muted = true;
@@ -246,18 +278,42 @@ video.setAttribute("playsinline", "");
 
 video.setAttribute(
   "webkit-playsinline",
-  ""
-);
+  "");
 
 video.controls = false;
 
 
 /* =========================================================
-   NASCONDE IL LOGO
-   SOLO QUANDO LA DIRETTA È PARTITA
+   LOGO FISSO PER 5 SECONDI
+   ========================================================= */
+
+function startLogoTimer() {
+
+  if (logoTimer) {
+
+    clearTimeout(logoTimer);
+
+  }
+
+
+  logoTimer = setTimeout(function() {
+
+    hideLogo();
+
+  }, 5000);
+
+}
+
+
+/* =========================================================
+   NASCONDE LOGO
    ========================================================= */
 
 function hideLogo() {
+
+  if (!logoScreen) {
+    return;
+  }
 
   logoScreen.classList.add("hidden");
 
@@ -265,7 +321,7 @@ function hideLogo() {
 
 
 /* =========================================================
-   PLAY
+   PLAY VIDEO
    ========================================================= */
 
 function playVideo() {
@@ -273,6 +329,7 @@ function playVideo() {
   video.muted = true;
 
   video.volume = 0;
+
 
   const promise = video.play();
 
@@ -285,8 +342,6 @@ function playVideo() {
         console.log(
           "EuroNews: video avviato"
         );
-
-        hideLogo();
 
       })
       .catch(function() {
@@ -303,7 +358,7 @@ function playVideo() {
 
 
 /* =========================================================
-   DISTRUGGE HLS
+   RESET HLS
    ========================================================= */
 
 function destroyHLS() {
@@ -341,18 +396,15 @@ function reconnect() {
   );
 
 
-  retryTimer = setTimeout(
-    function() {
+  retryTimer = setTimeout(function() {
 
-      retryTimer = null;
+    retryTimer = null;
 
-      destroyHLS();
+    destroyHLS();
 
-      startStream();
+    startStream();
 
-    },
-    3000
-  );
+  }, 3000);
 
 }
 
@@ -459,11 +511,6 @@ function startHLS() {
 
         case Hls.ErrorTypes.NETWORK_ERROR:
 
-          console.log(
-            "EuroNews: errore rete"
-          );
-
-
           try {
 
             hls.startLoad();
@@ -479,11 +526,6 @@ function startHLS() {
 
         case Hls.ErrorTypes.MEDIA_ERROR:
 
-          console.log(
-            "EuroNews: errore media"
-          );
-
-
           try {
 
             hls.recoverMediaError();
@@ -498,10 +540,6 @@ function startHLS() {
 
 
         default:
-
-          console.log(
-            "EuroNews: riavvio player"
-          );
 
           reconnect();
 
@@ -605,8 +643,6 @@ video.addEventListener(
       "EuroNews: riproduzione attiva"
     );
 
-    hideLogo();
-
   }
 );
 
@@ -624,21 +660,18 @@ video.addEventListener(
     );
 
 
-    setTimeout(
-      function() {
+    setTimeout(function() {
 
-        if (
-          video.paused ||
-          video.readyState < 3
-        ) {
+      if (
+        video.paused ||
+        video.readyState < 3
+      ) {
 
-          reconnect();
+        reconnect();
 
-        }
+      }
 
-      },
-      5000
-    );
+    }, 5000);
 
   }
 );
@@ -684,30 +717,34 @@ video.addEventListener(
    CONTROLLO AUTOMATICO
    ========================================================= */
 
-setInterval(
-  function() {
+setInterval(function() {
 
-    video.muted = true;
+  video.muted = true;
 
-    video.volume = 0;
+  video.volume = 0;
 
 
-    if (
-      video.paused &&
-      video.readyState >= 2
-    ) {
+  if (
+    video.paused &&
+    video.readyState >= 2
+  ) {
 
-      playVideo();
+    playVideo();
 
-    }
+  }
 
-  },
-  5000
-);
+}, 5000);
 
 
 /* =========================================================
-   AVVIO
+   AVVIO LOGO
+   ========================================================= */
+
+startLogoTimer();
+
+
+/* =========================================================
+   AVVIO STREAM
    ========================================================= */
 
 startStream();
