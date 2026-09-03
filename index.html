@@ -2,7 +2,6 @@
 <html lang="it">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta name="viewport"
@@ -14,92 +13,31 @@
 
         html,
         body {
-
             margin: 0;
             padding: 0;
-
             width: 100%;
             height: 100%;
-
             background: #000;
-
             overflow: hidden;
-
         }
-
-        body {
-
-            display: flex;
-
-            align-items: center;
-            justify-content: center;
-
-        }
-
-        /*
-         * PLAYER 16:9
-         */
-
-        #player {
-
-            position: relative;
-
-            width: 100vw;
-            height: 56.25vw;
-
-            max-width: 100vw;
-            max-height: 100vh;
-
-            background: #000;
-
-            overflow: hidden;
-
-        }
-
-        /*
-         * SCHERMI PIÙ LARGHI DEL 16:9
-         */
-
-        @media (min-aspect-ratio: 16/9) {
-
-            #player {
-
-                width: 177.77777778vh;
-                height: 100vh;
-
-            }
-
-        }
-
-        /*
-         * VIDEO
-         */
 
         #video {
-
-            position: absolute;
-
+            position: fixed;
             top: 0;
             left: 0;
 
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
 
-            display: block;
+            object-fit: cover;
 
             background: #000;
 
-            object-fit: contain;
-
+            display: block;
         }
 
-        /*
-         * MESSAGGIO
-         */
-
         #status {
-
-            position: absolute;
+            position: fixed;
 
             top: 50%;
             left: 50%;
@@ -109,101 +47,71 @@
             color: white;
 
             font-family: Arial, sans-serif;
-
             font-size: 22px;
 
             text-align: center;
 
-            background: rgba(0, 0, 0, 0.75);
+            display: block;
 
-            padding: 15px 25px;
+            z-index: 10;
+
+            background: rgba(0, 0, 0, 0.65);
+
+            padding: 18px 25px;
 
             border-radius: 8px;
-
-            z-index: 20;
-
         }
 
     </style>
-
 </head>
 
 
 <body>
 
+    <video
+        id="video"
+        autoplay
+        playsinline
+        preload="auto"
+        controls="false">
+    </video>
 
-    <div id="player">
-
-
-        <video
-
-            id="video"
-
-            autoplay
-
-            muted
-
-            playsinline
-
-            preload="auto">
-
-        </video>
-
-
-        <div id="status">
-
-            Connessione a Euronews...
-
-        </div>
-
-
+    <div id="status">
+        Connessione a Euronews...
     </div>
 
 
-    <!-- HLS.JS -->
-
+    <!-- HLS.js -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 
     <script>
 
-
-        /*
-         * ELEMENTI
-         */
-
-        const video =
-            document.getElementById("video");
-
-        const status =
-            document.getElementById("status");
+        const video = document.getElementById("video");
+        const status = document.getElementById("status");
 
 
         /*
-         * STREAM EURONEWS ITALIANO
+         * STREAM EURONEWS ITALIA
          */
-
         const STREAM_URL =
-            "https://acb6ca89.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmxheHhUVi1ldV9FdXJvbmV3c0l0YWxpYW5vX0hMUw/playlist.m3u8";
+            "https://cdn-euronews.akamaized.net/live/eds/euronews-it/25085/index.m3u8";
 
 
         /*
          * MOSTRA STATO
          */
-
         function showStatus(text) {
 
             status.textContent = text;
-
             status.style.display = "block";
 
         }
 
 
         /*
-         * NASCONDE STATO
+         * NASCONDI STATO
          */
-
         function hideStatus() {
 
             status.style.display = "none";
@@ -212,92 +120,29 @@
 
 
         /*
-         * AVVIO VIDEO
-         */
-
-        function playVideo() {
-
-            const promise = video.play();
-
-            if (promise !== undefined) {
-
-                promise.catch(function(error) {
-
-                    console.log(
-                        "Autoplay:",
-                        error
-                    );
-
-                });
-
-            }
-
-        }
-
-
-        /*
          * AVVIO STREAM
          */
-
         function startStream() {
 
-
-            showStatus(
-                "Connessione a Euronews..."
-            );
-
-
             /*
-             * HLS NATIVO
+             * SUPPORTO HLS NATIVO
+             *
+             * Safari / alcuni dispositivi
              */
+            if (video.canPlayType("application/vnd.apple.mpegurl")) {
 
-            if (
-                video.canPlayType(
-                    "application/vnd.apple.mpegurl"
-                )
-            ) {
-
-
-                console.log(
-                    "HLS nativo"
-                );
-
-
-                video.src =
-                    STREAM_URL;
-
+                video.src = STREAM_URL;
 
                 video.addEventListener(
-
                     "loadedmetadata",
-
-                    function() {
+                    function () {
 
                         hideStatus();
 
-                        playVideo();
+                        startVideo();
 
                     },
-
                     { once: true }
-
-                );
-
-
-                video.addEventListener(
-
-                    "error",
-
-                    function() {
-
-                        console.log(
-                            "Errore video"
-                        );
-
-                        reconnectNative();
-
-                    }
-
                 );
 
             }
@@ -305,415 +150,123 @@
 
             /*
              * HLS.JS
+             *
+             * Chrome / Edge / Android / OptiSigns
              */
+            else if (Hls.isSupported()) {
 
-            else if (
-                Hls.isSupported()
-            ) {
+                const hls = new Hls({
+
+                    /*
+                     * PARTENZA VELOCE
+                     */
+                    startLevel: -1,
+
+                    /*
+                     * BUFFER NON ECCESSIVO
+                     * per evitare ritardi inutili
+                     */
+                    maxBufferLength: 12,
+
+                    maxMaxBufferLength: 20,
+
+                    /*
+                     * RECUPERO AUTOMATICO
+                     */
+                    enableWorker: true,
+
+                    /*
+                     * BASSA LATENZA
+                     */
+                    lowLatencyMode: true,
+
+                    /*
+                     * RECUPERO ERRORI
+                     */
+                    backBufferLength: 30
+
+                });
 
 
-                console.log(
-                    "HLS.js"
-                );
+                hls.loadSource(STREAM_URL);
 
-
-                const hls =
-                    new Hls({
-
-                        /*
-                         * AVVIO VELOCE
-                         */
-
-                        autoStartLoad: true,
-
-                        /*
-                         * Parte vicino
-                         * alla diretta
-                         */
-
-                        startPosition: -1,
-
-                        liveSyncDurationCount: 3,
-
-                        liveMaxLatencyDurationCount: 8,
-
-                        /*
-                         * BUFFER
-                         *
-                         * 20 secondi sono sufficienti
-                         * per avere stabilità senza
-                         * rallentare troppo l'avvio.
-                         */
-
-                        maxBufferLength: 20,
-
-                        maxMaxBufferLength: 40,
-
-                        backBufferLength: 30,
-
-                        /*
-                         * EVITA DI SCARICARE
-                         * QUALITÀ INUTILMENTE
-                         * SUPERIORI AL PLAYER
-                         */
-
-                        capLevelToPlayerSize: true,
-
-                        /*
-                         * WORKER
-                         */
-
-                        enableWorker: true,
-
-                        /*
-                         * LOW LATENCY
-                         */
-
-                        lowLatencyMode: true,
-
-                        /*
-                         * STIMA INIZIALE
-                         *
-                         * Partiamo con una stima
-                         * abbastanza conservativa
-                         * per evitare un avvio lento.
-                         */
-
-                        abrEwmaDefaultEstimate: 1500000,
-
-                        /*
-                         * RETRY MANIFEST
-                         */
-
-                        manifestLoadingMaxRetry: 5,
-
-                        manifestLoadingRetryDelay: 1000,
-
-                        /*
-                         * RETRY LIVELLI
-                         */
-
-                        levelLoadingMaxRetry: 5,
-
-                        levelLoadingRetryDelay: 1000,
-
-                        /*
-                         * RETRY SEGMENTI
-                         */
-
-                        fragLoadingMaxRetry: 5,
-
-                        fragLoadingRetryDelay: 1000
-
-                    });
+                hls.attachMedia(video);
 
 
                 /*
-                 * CARICA STREAM
+                 * STREAM PRONTO
                  */
-
-                hls.loadSource(
-                    STREAM_URL
-                );
-
-
-                /*
-                 * COLLEGA VIDEO
-                 */
-
-                hls.attachMedia(
-                    video
-                );
-
-
-                /*
-                 * MANIFEST CARICATO
-                 */
-
                 hls.on(
-
                     Hls.Events.MANIFEST_PARSED,
-
-                    function() {
-
-
-                        console.log(
-                            "Manifest caricato"
-                        );
-
+                    function () {
 
                         hideStatus();
 
-
-                        playVideo();
-
-                    }
-
-                );
-
-
-                /*
-                 * QUALITÀ DISPONIBILI
-                 */
-
-                hls.on(
-
-                    Hls.Events.MANIFEST_PARSED,
-
-                    function() {
-
-
-                        console.log(
-                            "Qualità disponibili:",
-                            hls.levels.map(
-                                level =>
-                                    level.height + "p"
-                            )
-                        );
+                        startVideo();
 
                     }
-
-                );
-
-
-                /*
-                 * CAMBIO QUALITÀ
-                 */
-
-                hls.on(
-
-                    Hls.Events.LEVEL_SWITCHED,
-
-                    function(
-                        event,
-                        data
-                    ) {
-
-
-                        const level =
-                            hls.levels[data.level];
-
-
-                        if (level) {
-
-                            console.log(
-
-                                "Qualità:",
-                                level.width +
-                                "x" +
-                                level.height
-
-                            );
-
-                        }
-
-                    }
-
-                );
-
-
-                /*
-                 * VIDEO IN RIPRODUZIONE
-                 */
-
-                video.addEventListener(
-
-                    "playing",
-
-                    function() {
-
-                        hideStatus();
-
-                    }
-
-                );
-
-
-                /*
-                 * BUFFERING
-                 */
-
-                video.addEventListener(
-
-                    "waiting",
-
-                    function() {
-
-                        console.log(
-                            "Buffering..."
-                        );
-
-                    }
-
-                );
-
-
-                /*
-                 * STREAM BLOCCATO
-                 */
-
-                video.addEventListener(
-
-                    "stalled",
-
-                    function() {
-
-                        console.log(
-                            "Stream bloccato"
-                        );
-
-                        showStatus(
-                            "Riconnessione..."
-                        );
-
-                    }
-
                 );
 
 
                 /*
                  * ERRORI HLS
                  */
-
                 hls.on(
-
                     Hls.Events.ERROR,
+                    function (event, data) {
 
-                    function(
-                        event,
-                        data
-                    ) {
+                        console.log("HLS error:", data);
 
 
-                        console.log(
-                            "HLS error:",
-                            data
-                        );
+                        if (data.fatal) {
+
+                            showStatus("Riconnessione...");
 
 
-                        /*
-                         * ERRORE NON FATALE
-                         */
+                            switch (data.type) {
 
-                        if (!data.fatal) {
-
-                            return;
-
-                        }
-
-
-                        /*
-                         * RETE
-                         */
-
-                        if (
-
-                            data.type ===
-                            Hls.ErrorTypes.NETWORK_ERROR
-
-                        ) {
-
-
-                            console.log(
-                                "Errore rete"
-                            );
-
-
-                            showStatus(
-                                "Riconnessione..."
-                            );
-
-
-                            setTimeout(
-
-                                function() {
+                                case Hls.ErrorTypes.NETWORK_ERROR:
 
                                     hls.startLoad();
 
-                                },
-
-                                2000
-
-                            );
-
-                        }
+                                    break;
 
 
-                        /*
-                         * MEDIA
-                         */
+                                case Hls.ErrorTypes.MEDIA_ERROR:
 
-                        else if (
+                                    hls.recoverMediaError();
 
-                            data.type ===
-                            Hls.ErrorTypes.MEDIA_ERROR
-
-                        ) {
+                                    break;
 
 
-                            console.log(
-                                "Recupero errore media"
-                            );
+                                default:
 
+                                    hls.destroy();
 
-                            hls.recoverMediaError();
+                                    setTimeout(
+                                        startStream,
+                                        3000
+                                    );
 
-                        }
+                                    break;
 
-
-                        /*
-                         * ERRORE FATALE
-                         */
-
-                        else {
-
-
-                            console.log(
-                                "Riavvio HLS"
-                            );
-
-
-                            showStatus(
-                                "Riconnessione..."
-                            );
-
-
-                            hls.destroy();
-
-
-                            setTimeout(
-
-                                function() {
-
-                                    startStream();
-
-                                },
-
-                                3000
-
-                            );
+                            }
 
                         }
 
                     }
-
                 );
-
 
             }
 
 
             /*
-             * HLS NON SUPPORTATO
+             * NESSUN SUPPORTO HLS
              */
-
             else {
 
-
                 showStatus(
-
                     "Questo dispositivo non supporta lo streaming HLS."
-
                 );
 
             }
@@ -722,88 +275,147 @@
 
 
         /*
-         * RICONNESSIONE HLS NATIVO
+         * AVVIO VIDEO
+         *
+         * IMPORTANTE:
+         * NON usiamo muted.
          */
+        function startVideo() {
 
-        function reconnectNative() {
-
-
-            showStatus(
-                "Riconnessione..."
-            );
+            video.volume = 1.0;
 
 
-            setTimeout(
-
-                function() {
+            const playPromise = video.play();
 
 
-                    video.pause();
+            if (playPromise !== undefined) {
 
-                    video.removeAttribute(
-                        "src"
-                    );
+                playPromise
+                    .then(function () {
 
-                    video.load();
+                        hideStatus();
 
-                    video.src =
-                        STREAM_URL;
+                        console.log(
+                            "Euronews avviato con audio."
+                        );
 
-                    video.load();
+                    })
+                    .catch(function (error) {
 
-                    playVideo();
+                        console.log(
+                            "Autoplay con audio bloccato:",
+                            error
+                        );
 
 
-                },
+                        /*
+                         * Il browser/dispositivo ha
+                         * bloccato l'autoplay con audio.
+                         *
+                         * Lasciamo comunque il video pronto.
+                         */
+                        showStatus(
+                            "Premere play per attivare l'audio"
+                        );
 
-                2000
+                    });
 
-            );
+            }
 
         }
 
 
         /*
-         * CONTROLLO OGNI 10 SECONDI
+         * VIDEO IN RIPRODUZIONE
          */
+        video.addEventListener(
+            "playing",
+            function () {
 
-        setInterval(
+                hideStatus();
 
-            function() {
-
-
-                if (
-                    video.paused &&
-                    video.readyState >= 2
-                ) {
-
-
-                    console.log(
-                        "Video fermo - riavvio"
-                    );
-
-
-                    playVideo();
-
-                }
-
-
-            },
-
-            10000
-
+            }
         );
 
 
         /*
-         * AVVIO
+         * VIDEO IN ATTESA
          */
+        video.addEventListener(
+            "waiting",
+            function () {
 
+                showStatus("Caricamento...");
+
+            }
+        );
+
+
+        /*
+         * VIDEO BLOCCATO
+         */
+        video.addEventListener(
+            "stalled",
+            function () {
+
+                showStatus("Riconnessione...");
+
+            }
+        );
+
+
+        /*
+         * ERRORE VIDEO
+         */
+        video.addEventListener(
+            "error",
+            function () {
+
+                showStatus("Riconnessione...");
+
+                setTimeout(
+                    startStream,
+                    5000
+                );
+
+            }
+        );
+
+
+        /*
+         * SE IL VIDEO SI FERMA
+         */
+        video.addEventListener(
+            "pause",
+            function () {
+
+                /*
+                 * Evita pause accidentali.
+                 */
+                setTimeout(
+                    function () {
+
+                        if (video.paused) {
+
+                            startVideo();
+
+                        }
+
+                    },
+                    1000
+                );
+
+            }
+        );
+
+
+        /*
+         * AVVIO AUTOMATICO
+         */
         startStream();
 
 
     </script>
-
 
 </body>
 
