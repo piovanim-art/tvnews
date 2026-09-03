@@ -35,7 +35,6 @@ body {
 
 /* =========================================================
    VIDEO
-   NASCOSTO FINO A STREAM PRONTO
    ========================================================= */
 
 #video {
@@ -58,18 +57,7 @@ body {
 
   object-fit: contain;
 
-  display: none;
-
-}
-
-
-/* =========================================================
-   VIDEO VISIBILE
-   ========================================================= */
-
-#video.visible {
-
-  display: block !important;
+  display: block;
 
 }
 
@@ -106,8 +94,7 @@ body {
 
 
 /* =========================================================
-   LOGO
-   DIMENSIONE COMPLETAMENTE FISSA
+   LOGO VIRGIN ACTIVE
    ========================================================= */
 
 #logo {
@@ -115,11 +102,9 @@ body {
   display: block;
 
   width: 520px !important;
-
   height: auto !important;
 
   min-width: 520px !important;
-
   max-width: 520px !important;
 
   margin: 0 !important;
@@ -137,7 +122,7 @@ body {
 
 
 /* =========================================================
-   NASCONDE LOGO
+   LOGO NASCOSTO
    ========================================================= */
 
 #logoScreen.hidden {
@@ -148,7 +133,7 @@ body {
 
 
 /* =========================================================
-   NESSUNA ANIMAZIONE
+   BLOCCO ANIMAZIONI
    ========================================================= */
 
 html,
@@ -187,7 +172,7 @@ body,
 
 
 <!-- =======================================================
-     VIDEO
+     VIDEO EURONEWS
      ======================================================= -->
 
 <video
@@ -212,7 +197,7 @@ body,
 <script>
 
 /* =========================================================
-   STREAM
+   STREAM EURONEWS ITALIA
    ========================================================= */
 
 const STREAM_URL =
@@ -254,27 +239,31 @@ video.playsInline = true;
 video.controls = false;
 
 video.setAttribute("muted", "");
+
 video.setAttribute("autoplay", "");
+
 video.setAttribute("playsinline", "");
-video.setAttribute("webkit-playsinline", "");
+
+video.setAttribute(
+  "webkit-playsinline",
+  ""
+);
 
 
 /* =========================================================
-   MOSTRA LA DIRETTA
-   SOLO QUANDO È REALMENTE IN PLAYING
+   TIMER LOGO
+   8 SECONDI
    ========================================================= */
 
-function showVideo() {
-
-  video.classList.add("visible");
+setTimeout(function() {
 
   logoScreen.classList.add("hidden");
 
-}
+}, 8000);
 
 
 /* =========================================================
-   PLAY
+   PLAY VIDEO
    ========================================================= */
 
 function playVideo() {
@@ -292,21 +281,14 @@ function playVideo() {
       .then(function() {
 
         console.log(
-          "EuroNews: play riuscito"
+          "EuroNews: video avviato"
         );
-
-        /*
-         * IMPORTANTE:
-         * qui il video viene mostrato.
-         */
-
-        showVideo();
 
       })
       .catch(function() {
 
         console.log(
-          "EuroNews: play in attesa"
+          "EuroNews: autoplay in attesa"
         );
 
       });
@@ -355,27 +337,15 @@ function reconnect() {
   );
 
 
-  retryTimer = setTimeout(
-    function() {
+  retryTimer = setTimeout(function() {
 
-      retryTimer = null;
+    retryTimer = null;
 
-      /*
-       * Torna al logo durante
-       * il nuovo caricamento.
-       */
+    destroyHLS();
 
-      video.classList.remove("visible");
+    startStream();
 
-      logoScreen.classList.remove("hidden");
-
-      destroyHLS();
-
-      startStream();
-
-    },
-    3000
-  );
+  }, 3000);
 
 }
 
@@ -464,7 +434,7 @@ function startHLS() {
     function(event, data) {
 
       console.log(
-        "HLS:",
+        "HLS error:",
         data.type,
         data.details
       );
@@ -482,6 +452,11 @@ function startHLS() {
 
         case Hls.ErrorTypes.NETWORK_ERROR:
 
+          console.log(
+            "EuroNews: errore rete"
+          );
+
+
           try {
 
             hls.startLoad();
@@ -496,6 +471,11 @@ function startHLS() {
 
 
         case Hls.ErrorTypes.MEDIA_ERROR:
+
+          console.log(
+            "EuroNews: errore media"
+          );
+
 
           try {
 
@@ -557,6 +537,7 @@ function startStream() {
 
         playVideo();
 
+
         video.removeEventListener(
           "loadedmetadata",
           nativePlay
@@ -602,25 +583,7 @@ function startStream() {
 
 
 /* =========================================================
-   EVENTO PLAYING
-   ========================================================= */
-
-video.addEventListener(
-  "playing",
-  function() {
-
-    console.log(
-      "EuroNews: PLAYING"
-    );
-
-    showVideo();
-
-  }
-);
-
-
-/* =========================================================
-   STALLED
+   STREAM BLOCCATO
    ========================================================= */
 
 video.addEventListener(
@@ -632,28 +595,25 @@ video.addEventListener(
     );
 
 
-    setTimeout(
-      function() {
+    setTimeout(function() {
 
-        if (
-          video.paused ||
-          video.readyState < 3
-        ) {
+      if (
+        video.paused ||
+        video.readyState < 3
+      ) {
 
-          reconnect();
+        reconnect();
 
-        }
+      }
 
-      },
-      5000
-    );
+    }, 5000);
 
   }
 );
 
 
 /* =========================================================
-   ENDED
+   STREAM TERMINATO
    ========================================================= */
 
 video.addEventListener(
@@ -671,7 +631,7 @@ video.addEventListener(
 
 
 /* =========================================================
-   ERRORE
+   ERRORE VIDEO
    ========================================================= */
 
 video.addEventListener(
@@ -692,30 +652,27 @@ video.addEventListener(
    CONTROLLO AUTOMATICO
    ========================================================= */
 
-setInterval(
-  function() {
+setInterval(function() {
 
-    video.muted = true;
+  video.muted = true;
 
-    video.volume = 0;
+  video.volume = 0;
 
 
-    if (
-      video.paused &&
-      video.readyState >= 2
-    ) {
+  if (
+    video.paused &&
+    video.readyState >= 2
+  ) {
 
-      playVideo();
+    playVideo();
 
-    }
+  }
 
-  },
-  5000
-);
+}, 5000);
 
 
 /* =========================================================
-   AVVIO
+   AVVIO STREAM
    ========================================================= */
 
 startStream();
