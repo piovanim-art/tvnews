@@ -51,7 +51,7 @@
 
 
     /* =========================
-       SCHERMATA LOGO
+       SPLASH VIRGIN ACTIVE
        ========================= */
 
     #splash {
@@ -61,7 +61,7 @@
       width: 100%;
       height: 100%;
 
-      background: #ffffff;
+      background: #000;
 
       display: flex;
       align-items: center;
@@ -70,12 +70,12 @@
       z-index: 9999;
 
       opacity: 1;
-
-      transition: opacity 0.4s ease;
     }
 
 
-    /* LOGO SEMPRE ALLA STESSA DIMENSIONE */
+    /* =========================
+       LOGO FISSO
+       ========================= */
 
     #logo {
       display: block;
@@ -94,11 +94,10 @@
     }
 
 
-    /* NASCONDE LO SPLASH */
+    /* NASCONDE IL LOGO */
 
     #splash.hidden {
-      opacity: 0;
-      pointer-events: none;
+      display: none;
     }
 
   </style>
@@ -109,7 +108,7 @@
 
 
   <!-- =========================
-       LOGO VIRGIN ACTIVE
+       SPLASH VIRGIN ACTIVE
        ========================= -->
 
   <div id="splash">
@@ -138,8 +137,6 @@
     controlslist="nodownload noplaybackrate nofullscreen"
   ></video>
 
-
-  <!-- HLS.JS -->
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
 
@@ -175,14 +172,14 @@
 
 
     /* =========================
-       NASCONDE LOGO DOPO 5 SECONDI
+       LOGO PER 8 SECONDI
        ========================= */
 
     setTimeout(function () {
 
       splash.classList.add("hidden");
 
-    }, 5000);
+    }, 8000);
 
 
     /* =========================
@@ -199,12 +196,12 @@
       if (promise !== undefined) {
 
         promise
-          .then(() => {
+          .then(function () {
 
             console.log("EuroNews: video avviato");
 
           })
-          .catch(() => {
+          .catch(function () {
 
             console.log("EuroNews: autoplay in attesa");
 
@@ -216,7 +213,7 @@
 
 
     /* =========================
-       RESET HLS
+       DISTRUGGE HLS
        ========================= */
 
     function destroyHLS() {
@@ -245,7 +242,7 @@
 
       console.log("EuroNews: riconnessione...");
 
-      retryTimer = setTimeout(() => {
+      retryTimer = setTimeout(function () {
 
         retryTimer = null;
 
@@ -343,8 +340,6 @@
 
             case Hls.ErrorTypes.NETWORK_ERROR:
 
-              console.log("EuroNews: errore rete");
-
               try {
 
                 hls.startLoad();
@@ -360,8 +355,6 @@
 
             case Hls.ErrorTypes.MEDIA_ERROR:
 
-              console.log("EuroNews: errore media");
-
               try {
 
                 hls.recoverMediaError();
@@ -376,8 +369,6 @@
 
 
             default:
-
-              console.log("EuroNews: riavvio player");
 
               reconnect();
 
@@ -451,19 +442,14 @@
 
 
     /* =========================
-       STALLED
+       STREAM BLOCCATO
        ========================= */
 
     video.addEventListener(
       "stalled",
       function () {
 
-        console.log(
-          "EuroNews: stream stalled"
-        );
-
-
-        setTimeout(() => {
+        setTimeout(function () {
 
           if (
             video.paused ||
@@ -481,16 +467,12 @@
 
 
     /* =========================
-       ENDED
+       STREAM TERMINATO
        ========================= */
 
     video.addEventListener(
       "ended",
       function () {
-
-        console.log(
-          "EuroNews: stream terminato"
-        );
 
         reconnect();
 
@@ -499,16 +481,12 @@
 
 
     /* =========================
-       ERROR
+       ERRORE VIDEO
        ========================= */
 
     video.addEventListener(
       "error",
       function () {
-
-        console.log(
-          "EuroNews: errore video"
-        );
 
         reconnect();
 
@@ -524,7 +502,6 @@
 
       video.muted = true;
       video.volume = 0;
-
 
       if (
         video.paused &&
