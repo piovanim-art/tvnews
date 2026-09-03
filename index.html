@@ -21,6 +21,7 @@ html,
 body {
   width: 100%;
   height: 100%;
+
   margin: 0;
   padding: 0;
 
@@ -30,6 +31,8 @@ body {
 
   position: fixed;
   inset: 0;
+
+  transform: none !important;
 }
 
 
@@ -50,10 +53,10 @@ body {
   margin: 0;
   padding: 0;
 
+  background: #000;
+
   border: 0;
   outline: 0;
-
-  background: #000;
 
   object-fit: contain;
 
@@ -90,27 +93,67 @@ body {
 
   overflow: hidden;
 
+  transform: none !important;
+
+  zoom: 1 !important;
+
 }
 
 
 /* =========================================================
-   LOGO VIRGIN ACTIVE
+   CONTENITORE LOGO
+   DIMENSIONE RELATIVA ALLO SCHERMO
+   ========================================================= */
+
+#logoBox {
+
+  width: 45vw;
+
+  height: 45vh;
+
+  max-width: none;
+  max-height: none;
+
+  min-width: 0;
+  min-height: 0;
+
+  flex: 0 0 auto;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+
+  transform: none !important;
+
+  zoom: 1 !important;
+
+}
+
+
+/* =========================================================
+   LOGO
    ========================================================= */
 
 #logo {
 
   display: block;
 
-  width: 520px !important;
-  height: auto !important;
+  width: 100%;
 
-  min-width: 520px !important;
-  max-width: 520px !important;
+  height: auto;
 
-  margin: 0 !important;
-  padding: 0 !important;
+  max-width: 100%;
+  max-height: 100%;
+
+  margin: 0;
+  padding: 0;
 
   border: 0;
+
+  object-fit: contain;
 
   transform: none !important;
 
@@ -122,7 +165,7 @@ body {
 
 
 /* =========================================================
-   LOGO NASCOSTO
+   NASCONDE LOGO
    ========================================================= */
 
 #logoScreen.hidden {
@@ -133,12 +176,13 @@ body {
 
 
 /* =========================================================
-   BLOCCO ANIMAZIONI
+   NESSUNA ANIMAZIONE
    ========================================================= */
 
 html,
 body,
 #logoScreen,
+#logoBox,
 #logo,
 #video {
 
@@ -162,11 +206,15 @@ body,
 
 <div id="logoScreen">
 
-  <img
-    id="logo"
-    src="logo.png"
-    alt="Virgin Active"
-  >
+  <div id="logoBox">
+
+    <img
+      id="logo"
+      src="logo.png"
+      alt="Virgin Active"
+    >
+
+  </div>
 
 </div>
 
@@ -177,13 +225,18 @@ body,
 
 <video
   id="video"
+
   autoplay
   muted
   playsinline
   webkit-playsinline
+
   preload="auto"
+
   disablepictureinpicture
+
   controlslist="nodownload noplaybackrate nofullscreen"
+
 ></video>
 
 
@@ -229,25 +282,17 @@ let retryTimer = null;
    ========================================================= */
 
 video.muted = true;
-
 video.volume = 0;
 
 video.autoplay = true;
-
 video.playsInline = true;
 
-video.controls = false;
-
 video.setAttribute("muted", "");
-
 video.setAttribute("autoplay", "");
-
 video.setAttribute("playsinline", "");
+video.setAttribute("webkit-playsinline", "");
 
-video.setAttribute(
-  "webkit-playsinline",
-  ""
-);
+video.controls = false;
 
 
 /* =========================================================
@@ -269,11 +314,9 @@ setTimeout(function() {
 function playVideo() {
 
   video.muted = true;
-
   video.volume = 0;
 
   const promise = video.play();
-
 
   if (promise !== undefined) {
 
@@ -307,9 +350,7 @@ function destroyHLS() {
   if (hls) {
 
     try {
-
       hls.destroy();
-
     } catch (e) {}
 
     hls = null;
@@ -326,16 +367,12 @@ function destroyHLS() {
 function reconnect() {
 
   if (retryTimer) {
-
     return;
-
   }
-
 
   console.log(
     "EuroNews: riconnessione..."
   );
-
 
   retryTimer = setTimeout(function() {
 
@@ -357,7 +394,6 @@ function reconnect() {
 function startHLS() {
 
   destroyHLS();
-
 
   hls = new Hls({
 
@@ -441,21 +477,13 @@ function startHLS() {
 
 
       if (!data.fatal) {
-
         return;
-
       }
 
 
       switch (data.type) {
 
-
         case Hls.ErrorTypes.NETWORK_ERROR:
-
-          console.log(
-            "EuroNews: errore rete"
-          );
-
 
           try {
 
@@ -471,11 +499,6 @@ function startHLS() {
 
 
         case Hls.ErrorTypes.MEDIA_ERROR:
-
-          console.log(
-            "EuroNews: errore media"
-          );
-
 
           try {
 
@@ -513,9 +536,7 @@ function startStream() {
   destroyHLS();
 
 
-  /* -------------------------------------------------------
-     HLS NATIVO
-     ------------------------------------------------------- */
+  /* HLS NATIVO */
 
   if (
     video.canPlayType(
@@ -537,7 +558,6 @@ function startStream() {
 
         playVideo();
 
-
         video.removeEventListener(
           "loadedmetadata",
           nativePlay
@@ -552,9 +572,7 @@ function startStream() {
   }
 
 
-  /* -------------------------------------------------------
-     HLS.JS
-     ------------------------------------------------------- */
+  /* HLS.JS */
 
   if (
     window.Hls &&
@@ -576,24 +594,18 @@ function startStream() {
     "EuroNews: HLS non supportato"
   );
 
-
   reconnect();
 
 }
 
 
 /* =========================================================
-   STREAM BLOCCATO
+   STALLED
    ========================================================= */
 
 video.addEventListener(
   "stalled",
   function() {
-
-    console.log(
-      "EuroNews: stream stalled"
-    );
-
 
     setTimeout(function() {
 
@@ -613,16 +625,12 @@ video.addEventListener(
 
 
 /* =========================================================
-   STREAM TERMINATO
+   ENDED
    ========================================================= */
 
 video.addEventListener(
   "ended",
   function() {
-
-    console.log(
-      "EuroNews: stream terminato"
-    );
 
     reconnect();
 
@@ -631,16 +639,12 @@ video.addEventListener(
 
 
 /* =========================================================
-   ERRORE VIDEO
+   ERROR
    ========================================================= */
 
 video.addEventListener(
   "error",
   function() {
-
-    console.log(
-      "EuroNews: errore video"
-    );
 
     reconnect();
 
@@ -655,7 +659,6 @@ video.addEventListener(
 setInterval(function() {
 
   video.muted = true;
-
   video.volume = 0;
 
 
@@ -672,7 +675,7 @@ setInterval(function() {
 
 
 /* =========================================================
-   AVVIO STREAM
+   AVVIO
    ========================================================= */
 
 startStream();
