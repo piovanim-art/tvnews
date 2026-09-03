@@ -48,12 +48,16 @@ body {
 
 #video {
 
-  position: absolute;
+  position: fixed;
 
-  inset: 0;
+  left: 0;
+  top: 0;
 
   width: 100%;
   height: 100%;
+
+  margin: 0;
+  padding: 0;
 
   display: block;
 
@@ -68,17 +72,21 @@ body {
 
 
 /* =========================================================
-   SCHERMATA LOGO
+   SCHERMATA INIZIALE
    ========================================================= */
 
 #logoScreen {
 
   position: fixed;
 
-  inset: 0;
+  left: 0;
+  top: 0;
 
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
+
+  margin: 0;
+  padding: 0;
 
   background: #000;
 
@@ -87,37 +95,62 @@ body {
   align-items: center;
   justify-content: center;
 
-  z-index: 9999;
+  z-index: 999999;
+
+  transform: none !important;
+
+  zoom: 1 !important;
 
 }
 
 
 /* =========================================================
-   LOGO
+   CONTENITORE LOGO
+   DIMENSIONE FISSA
    ========================================================= */
 
-#logo {
+#logoBox {
 
-  width: 420px;
+  width: 600px !important;
 
-  height: auto;
+  height: 300px !important;
 
-  max-width: none;
+  min-width: 600px !important;
+
+  min-height: 300px !important;
+
+  max-width: 600px !important;
+
+  max-height: 300px !important;
+
+  flex: 0 0 600px !important;
 
   display: block;
 
-  flex: none;
+  position: relative;
+
+  transform: none !important;
+
+  zoom: 1 !important;
+
+  background-image: url("logo.png");
+
+  background-repeat: no-repeat;
+
+  background-position: center center;
+
+  background-size: 600px auto;
 
 }
 
 
 /* =========================================================
-   NASCONDE LA SCHERMATA LOGO
+   NASCONDE LOGO
    ========================================================= */
 
 #logoScreen.hidden {
 
-  display: none;
+  display: none !important;
 
 }
 
@@ -130,16 +163,12 @@ body {
 
 
 <!-- =======================================================
-     SCHERMATA NERA CON LOGO
+     LOGO VIRGIN ACTIVE
      ======================================================= -->
 
 <div id="logoScreen">
 
-  <img
-    id="logo"
-    src="logo.png"
-    alt="Virgin Active"
-  >
+  <div id="logoBox"></div>
 
 </div>
 
@@ -150,18 +179,13 @@ body {
 
 <video
   id="video"
-
   autoplay
   muted
   playsinline
   webkit-playsinline
-
   preload="auto"
-
   disablepictureinpicture
-
   controlslist="nodownload noplaybackrate nofullscreen"
-
 ></video>
 
 
@@ -175,7 +199,7 @@ body {
 <script>
 
 /* =========================================================
-   CONFIGURAZIONE
+   STREAM EURONEWS ITALIA
    ========================================================= */
 
 const STREAM_URL =
@@ -186,9 +210,11 @@ const STREAM_URL =
    ELEMENTI
    ========================================================= */
 
-const video = document.getElementById("video");
+const video =
+  document.getElementById("video");
 
-const logoScreen = document.getElementById("logoScreen");
+const logoScreen =
+  document.getElementById("logoScreen");
 
 
 /* =========================================================
@@ -218,29 +244,28 @@ video.setAttribute("autoplay", "");
 
 video.setAttribute("playsinline", "");
 
-video.setAttribute("webkit-playsinline", "");
+video.setAttribute(
+  "webkit-playsinline",
+  ""
+);
 
 video.controls = false;
 
 
 /* =========================================================
    NASCONDE IL LOGO
-   SOLO QUANDO IL VIDEO STA REALMENTE RIPRODUCENDO
+   SOLO QUANDO LA DIRETTA È PARTITA
    ========================================================= */
 
 function hideLogo() {
 
-  if (!logoScreen.classList.contains("hidden")) {
-
-    logoScreen.classList.add("hidden");
-
-  }
+  logoScreen.classList.add("hidden");
 
 }
 
 
 /* =========================================================
-   PLAY VIDEO
+   PLAY
    ========================================================= */
 
 function playVideo() {
@@ -257,14 +282,18 @@ function playVideo() {
     promise
       .then(function() {
 
-        console.log("EuroNews: video avviato");
+        console.log(
+          "EuroNews: video avviato"
+        );
 
         hideLogo();
 
       })
       .catch(function() {
 
-        console.log("EuroNews: autoplay in attesa");
+        console.log(
+          "EuroNews: autoplay in attesa"
+        );
 
       });
 
@@ -274,7 +303,7 @@ function playVideo() {
 
 
 /* =========================================================
-   RESET HLS
+   DISTRUGGE HLS
    ========================================================= */
 
 function destroyHLS() {
@@ -307,18 +336,23 @@ function reconnect() {
   }
 
 
-  console.log("EuroNews: riconnessione...");
+  console.log(
+    "EuroNews: riconnessione..."
+  );
 
 
-  retryTimer = setTimeout(function() {
+  retryTimer = setTimeout(
+    function() {
 
-    retryTimer = null;
+      retryTimer = null;
 
-    destroyHLS();
+      destroyHLS();
 
-    startStream();
+      startStream();
 
-  }, 3000);
+    },
+    3000
+  );
 
 }
 
@@ -376,9 +410,13 @@ function startHLS() {
     Hls.Events.MEDIA_ATTACHED,
     function() {
 
-      console.log("EuroNews: player collegato");
+      console.log(
+        "EuroNews: player collegato"
+      );
 
-      hls.loadSource(STREAM_URL);
+      hls.loadSource(
+        STREAM_URL
+      );
 
     }
   );
@@ -388,7 +426,9 @@ function startHLS() {
     Hls.Events.MANIFEST_PARSED,
     function() {
 
-      console.log("EuroNews: stream disponibile");
+      console.log(
+        "EuroNews: stream disponibile"
+      );
 
       playVideo();
 
@@ -419,7 +459,9 @@ function startHLS() {
 
         case Hls.ErrorTypes.NETWORK_ERROR:
 
-          console.log("EuroNews: errore rete");
+          console.log(
+            "EuroNews: errore rete"
+          );
 
 
           try {
@@ -437,7 +479,9 @@ function startHLS() {
 
         case Hls.ErrorTypes.MEDIA_ERROR:
 
-          console.log("EuroNews: errore media");
+          console.log(
+            "EuroNews: errore media"
+          );
 
 
           try {
@@ -455,7 +499,9 @@ function startHLS() {
 
         default:
 
-          console.log("EuroNews: riavvio player");
+          console.log(
+            "EuroNews: riavvio player"
+          );
 
           reconnect();
 
@@ -488,8 +534,9 @@ function startStream() {
     )
   ) {
 
-
-    console.log("EuroNews: HLS nativo");
+    console.log(
+      "EuroNews: HLS nativo"
+    );
 
 
     video.src = STREAM_URL;
@@ -525,7 +572,9 @@ function startStream() {
     Hls.isSupported()
   ) {
 
-    console.log("EuroNews: HLS.js");
+    console.log(
+      "EuroNews: HLS.js"
+    );
 
     startHLS();
 
@@ -545,7 +594,7 @@ function startStream() {
 
 
 /* =========================================================
-   QUANDO IL VIDEO PARTE REALMENTE
+   VIDEO IN RIPRODUZIONE
    ========================================================= */
 
 video.addEventListener(
@@ -563,7 +612,7 @@ video.addEventListener(
 
 
 /* =========================================================
-   STALLED
+   STREAM BLOCCATO
    ========================================================= */
 
 video.addEventListener(
@@ -575,25 +624,28 @@ video.addEventListener(
     );
 
 
-    setTimeout(function() {
+    setTimeout(
+      function() {
 
-      if (
-        video.paused ||
-        video.readyState < 3
-      ) {
+        if (
+          video.paused ||
+          video.readyState < 3
+        ) {
 
-        reconnect();
+          reconnect();
 
-      }
+        }
 
-    }, 5000);
+      },
+      5000
+    );
 
   }
 );
 
 
 /* =========================================================
-   ENDED
+   STREAM TERMINATO
    ========================================================= */
 
 video.addEventListener(
@@ -611,7 +663,7 @@ video.addEventListener(
 
 
 /* =========================================================
-   ERROR
+   ERRORE VIDEO
    ========================================================= */
 
 video.addEventListener(
@@ -632,23 +684,26 @@ video.addEventListener(
    CONTROLLO AUTOMATICO
    ========================================================= */
 
-setInterval(function() {
+setInterval(
+  function() {
 
-  video.muted = true;
+    video.muted = true;
 
-  video.volume = 0;
+    video.volume = 0;
 
 
-  if (
-    video.paused &&
-    video.readyState >= 2
-  ) {
+    if (
+      video.paused &&
+      video.readyState >= 2
+    ) {
 
-    playVideo();
+      playVideo();
 
-  }
+    }
 
-}, 5000);
+  },
+  5000
+);
 
 
 /* =========================================================
