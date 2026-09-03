@@ -10,7 +10,6 @@
 
     <title>TVNews - Euronews Italia Live</title>
 
-
     <style>
 
         html,
@@ -28,20 +27,17 @@
 
         }
 
-
         body {
 
             display: flex;
 
             align-items: center;
-
             justify-content: center;
 
         }
 
-
         /*
-         * CONTENITORE VIDEO 16:9
+         * PLAYER 16:9
          */
 
         #player {
@@ -49,11 +45,9 @@
             position: relative;
 
             width: 100vw;
-
             height: 56.25vw;
 
             max-width: 100vw;
-
             max-height: 100vh;
 
             background: #000;
@@ -62,9 +56,8 @@
 
         }
 
-
         /*
-         * QUANDO LO SCHERMO È PIÙ LARGO DEL 16:9
+         * SCHERMI PIÙ LARGHI DEL 16:9
          */
 
         @media (min-aspect-ratio: 16/9) {
@@ -72,13 +65,11 @@
             #player {
 
                 width: 177.77777778vh;
-
                 height: 100vh;
 
             }
 
         }
-
 
         /*
          * VIDEO
@@ -98,17 +89,12 @@
 
             background: #000;
 
-            /*
-             * Mantiene il formato originale
-             */
-
             object-fit: contain;
 
         }
 
-
         /*
-         * MESSAGGIO DI STATO
+         * MESSAGGIO
          */
 
         #status {
@@ -174,15 +160,9 @@
     </div>
 
 
-
-    <!--
-
-        HLS.JS
-
-    -->
+    <!-- HLS.JS -->
 
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
 
 
     <script>
@@ -199,21 +179,16 @@
             document.getElementById("status");
 
 
-
         /*
          * STREAM EURONEWS ITALIANO
-         *
-         * SORGENTE PRINCIPALE WURL
          */
 
         const STREAM_URL =
-
             "https://acb6ca89.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmxheHhUVi1ldV9FdXJvbmV3c0l0YWxpYW5vX0hMUw/playlist.m3u8";
 
 
-
         /*
-         * MOSTRA MESSAGGIO
+         * MOSTRA STATO
          */
 
         function showStatus(text) {
@@ -225,9 +200,8 @@
         }
 
 
-
         /*
-         * NASCONDE MESSAGGIO
+         * NASCONDE STATO
          */
 
         function hideStatus() {
@@ -237,24 +211,28 @@
         }
 
 
-
         /*
-         * PLAY
+         * AVVIO VIDEO
          */
 
         function playVideo() {
 
-            video.play().catch(function(error) {
+            const promise = video.play();
 
-                console.log(
-                    "Autoplay non disponibile:",
-                    error
-                );
+            if (promise !== undefined) {
 
-            });
+                promise.catch(function(error) {
+
+                    console.log(
+                        "Autoplay:",
+                        error
+                    );
+
+                });
+
+            }
 
         }
-
 
 
         /*
@@ -269,11 +247,8 @@
             );
 
 
-
             /*
              * HLS NATIVO
-             *
-             * Safari / alcuni dispositivi
              */
 
             if (
@@ -284,11 +259,12 @@
 
 
                 console.log(
-                    "Utilizzo HLS nativo"
+                    "HLS nativo"
                 );
 
 
-                video.src = STREAM_URL;
+                video.src =
+                    STREAM_URL;
 
 
                 video.addEventListener(
@@ -327,7 +303,6 @@
             }
 
 
-
             /*
              * HLS.JS
              */
@@ -338,7 +313,7 @@
 
 
                 console.log(
-                    "Utilizzo HLS.js"
+                    "HLS.js"
                 );
 
 
@@ -346,44 +321,91 @@
                     new Hls({
 
                         /*
-                         * Mantiene il player
-                         * vicino alla diretta
+                         * AVVIO VELOCE
                          */
+
+                        autoStartLoad: true,
+
+                        /*
+                         * Parte vicino
+                         * alla diretta
+                         */
+
+                        startPosition: -1,
 
                         liveSyncDurationCount: 3,
 
-                        liveMaxLatencyDurationCount: 6,
+                        liveMaxLatencyDurationCount: 8,
 
                         /*
-                         * Worker
+                         * BUFFER
+                         *
+                         * 20 secondi sono sufficienti
+                         * per avere stabilità senza
+                         * rallentare troppo l'avvio.
+                         */
+
+                        maxBufferLength: 20,
+
+                        maxMaxBufferLength: 40,
+
+                        backBufferLength: 30,
+
+                        /*
+                         * EVITA DI SCARICARE
+                         * QUALITÀ INUTILMENTE
+                         * SUPERIORI AL PLAYER
+                         */
+
+                        capLevelToPlayerSize: true,
+
+                        /*
+                         * WORKER
                          */
 
                         enableWorker: true,
 
                         /*
-                         * Bassa latenza
+                         * LOW LATENCY
                          */
 
                         lowLatencyMode: true,
 
                         /*
-                         * Buffer
+                         * STIMA INIZIALE
+                         *
+                         * Partiamo con una stima
+                         * abbastanza conservativa
+                         * per evitare un avvio lento.
                          */
 
-                        backBufferLength: 30,
+                        abrEwmaDefaultEstimate: 1500000,
 
                         /*
-                         * Retry
+                         * RETRY MANIFEST
                          */
 
-                        manifestLoadingMaxRetry: 6,
+                        manifestLoadingMaxRetry: 5,
 
-                        levelLoadingMaxRetry: 6,
+                        manifestLoadingRetryDelay: 1000,
 
-                        fragLoadingMaxRetry: 6
+                        /*
+                         * RETRY LIVELLI
+                         */
+
+                        levelLoadingMaxRetry: 5,
+
+                        levelLoadingRetryDelay: 1000,
+
+                        /*
+                         * RETRY SEGMENTI
+                         */
+
+                        fragLoadingMaxRetry: 5,
+
+                        fragLoadingRetryDelay: 1000
 
                     });
-
 
 
                 /*
@@ -395,9 +417,8 @@
                 );
 
 
-
                 /*
-                 * COLLEGA AL VIDEO
+                 * COLLEGA VIDEO
                  */
 
                 hls.attachMedia(
@@ -405,9 +426,8 @@
                 );
 
 
-
                 /*
-                 * MANIFEST PRONTO
+                 * MANIFEST CARICATO
                  */
 
                 hls.on(
@@ -418,7 +438,7 @@
 
 
                         console.log(
-                            "Manifest Euronews caricato"
+                            "Manifest caricato"
                         );
 
 
@@ -432,6 +452,65 @@
                 );
 
 
+                /*
+                 * QUALITÀ DISPONIBILI
+                 */
+
+                hls.on(
+
+                    Hls.Events.MANIFEST_PARSED,
+
+                    function() {
+
+
+                        console.log(
+                            "Qualità disponibili:",
+                            hls.levels.map(
+                                level =>
+                                    level.height + "p"
+                            )
+                        );
+
+                    }
+
+                );
+
+
+                /*
+                 * CAMBIO QUALITÀ
+                 */
+
+                hls.on(
+
+                    Hls.Events.LEVEL_SWITCHED,
+
+                    function(
+                        event,
+                        data
+                    ) {
+
+
+                        const level =
+                            hls.levels[data.level];
+
+
+                        if (level) {
+
+                            console.log(
+
+                                "Qualità:",
+                                level.width +
+                                "x" +
+                                level.height
+
+                            );
+
+                        }
+
+                    }
+
+                );
+
 
                 /*
                  * VIDEO IN RIPRODUZIONE
@@ -443,10 +522,6 @@
 
                     function() {
 
-                        console.log(
-                            "Euronews in riproduzione"
-                        );
-
                         hideStatus();
 
                     }
@@ -454,9 +529,27 @@
                 );
 
 
+                /*
+                 * BUFFERING
+                 */
+
+                video.addEventListener(
+
+                    "waiting",
+
+                    function() {
+
+                        console.log(
+                            "Buffering..."
+                        );
+
+                    }
+
+                );
+
 
                 /*
-                 * VIDEO BLOCCATO
+                 * STREAM BLOCCATO
                  */
 
                 video.addEventListener(
@@ -476,27 +569,6 @@
                     }
 
                 );
-
-
-
-                /*
-                 * WAITING
-                 */
-
-                video.addEventListener(
-
-                    "waiting",
-
-                    function() {
-
-                        console.log(
-                            "Buffering..."
-                        );
-
-                    }
-
-                );
-
 
 
                 /*
@@ -519,7 +591,6 @@
                         );
 
 
-
                         /*
                          * ERRORE NON FATALE
                          */
@@ -531,9 +602,8 @@
                         }
 
 
-
                         /*
-                         * ERRORE DI RETE
+                         * RETE
                          */
 
                         if (
@@ -545,7 +615,7 @@
 
 
                             console.log(
-                                "Errore rete - riconnessione"
+                                "Errore rete"
                             );
 
 
@@ -562,17 +632,15 @@
 
                                 },
 
-                                3000
+                                2000
 
                             );
-
 
                         }
 
 
-
                         /*
-                         * ERRORE MEDIA
+                         * MEDIA
                          */
 
                         else if (
@@ -584,14 +652,13 @@
 
 
                             console.log(
-                                "Errore media - recupero"
+                                "Recupero errore media"
                             );
 
 
                             hls.recoverMediaError();
 
                         }
-
 
 
                         /*
@@ -602,7 +669,7 @@
 
 
                             console.log(
-                                "Errore HLS fatale"
+                                "Riavvio HLS"
                             );
 
 
@@ -622,7 +689,7 @@
 
                                 },
 
-                                5000
+                                3000
 
                             );
 
@@ -632,8 +699,8 @@
 
                 );
 
-            }
 
+            }
 
 
             /*
@@ -652,7 +719,6 @@
             }
 
         }
-
 
 
         /*
@@ -674,40 +740,31 @@
 
                     video.pause();
 
-
                     video.removeAttribute(
                         "src"
                     );
 
-
                     video.load();
-
 
                     video.src =
                         STREAM_URL;
 
-
                     video.load();
-
 
                     playVideo();
 
 
                 },
 
-                3000
+                2000
 
             );
 
         }
 
 
-
         /*
-         * CONTROLLO PERIODICO
-         *
-         * Se il video si ferma,
-         * prova automaticamente a ripartire.
+         * CONTROLLO OGNI 10 SECONDI
          */
 
         setInterval(
@@ -716,10 +773,8 @@
 
 
                 if (
-
                     video.paused &&
                     video.readyState >= 2
-
                 ) {
 
 
@@ -738,7 +793,6 @@
             10000
 
         );
-
 
 
         /*
